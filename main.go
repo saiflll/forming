@@ -28,6 +28,7 @@ type Payload struct {
 	Total  int    `json:"total"`
 	Reject int    `json:"reject"`
 	Status int    `json:"status"`
+	Prefix string `json:"prefix"`
 }
 
 // Record structure for database rows
@@ -38,6 +39,7 @@ type Record struct {
 	Total     int       `json:"total"`
 	Reject    int       `json:"reject"`
 	Status    int       `json:"status"`
+	Prefix    string    `json:"prefix"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -70,8 +72,12 @@ func main() {
 	}
 
 	// --- MQTT Connection ---
+	mqttHost := getEnv("MQTT_HOST", "172.20.100.11")
+	mqttPort := getEnv("MQTT_PORT", "1883")
+	brokerUrl := fmt.Sprintf("tcp://%s:%s", mqttHost, mqttPort)
+
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://172.20.100.11:1883")
+	opts.AddBroker(brokerUrl)
 	opts.SetClientID("forming-app-subscriber-" + fmt.Sprintf("%d", time.Now().Unix()))
 	opts.SetDefaultPublishHandler(messagePubHandler)
 
@@ -124,6 +130,18 @@ func main() {
 		})
 	})
 
+	// API Endpoint untuk Summary (Total 1 Jam Terakhir)
+	app.Get("/summary", func(c *fiber.Ctx) error {
+		summaries, err := getSummary()
+		if err != nil {
+			log.Println("Error fetching summary:", err)
+			return c.Status(500).SendString("Error fetching summary")
+		}
+		return c.Render("summary", fiber.Map{
+			"Summaries": summaries,
+		})
+	})
+
 	log.Fatal(app.Listen(":3000"))
 }
 
@@ -159,6 +177,7 @@ func createTable() {
 		total INTEGER,
 		reject INTEGER,
 		status INTEGER,
+		prefix VARCHAR(50),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`
 	_, err := db.Exec(query)
@@ -167,6 +186,13 @@ func createTable() {
 	} else {
 		log.Println("Table 'production_mdcw' ensured")
 	}
+
+	// Migrasi manual untuk menambahkan kolom prefix jika belum ada (untuk tabel yg sudah existing)
+	alterQuery := `ALTER TABLE production_mdcw ADD COLUMN IF NOT EXISTS prefix VARCHAR(50)`
+	_, err = db.Exec(alterQuery)
+	if err != nil {
+		log.Println("Error altering table:", err)
+	}
 }
 
 func insertData(p Payload) {
@@ -174,9 +200,9 @@ func insertData(p Payload) {
 		return
 	}
 
-	query := `INSERT INTO production_mdcw (ts, weight, total, reject, status) VALUES ($1, $2, $3, $4, $5)`
+	query := `INSERT INTO production_mdcw (ts, weight, total, reject, status, prefix) VALUES ($1, $2, $3, $4, $5, $6)`
 
-	_, err := db.Exec(query, p.Ts, p.Weight, p.Total, p.Reject, p.Status)
+	_, err := db.Exec(query, p.Ts, p.Weight, p.Total, p.Reject, p.Status, p.Prefix)
 	if err != nil {
 		log.Println("Error inserting data:", err)
 	} else {
@@ -189,7 +215,7 @@ func getRecords(statusFilter string, sortBy string) ([]Record, error) {
 		return []Record{}, nil
 	}
 
-	query := "SELECT id, ts, weight, total, reject, status, created_at FROM production_mdcw WHERE 1=1"
+	query := "SELECT id, ts, weight, total, reject, status, prefix, created_at FROM production_mdcw WHERE 1=1"
 	args := []interface{}{}
 	argId := 1
 
@@ -218,10 +244,59 @@ func getRecords(statusFilter string, sortBy string) ([]Record, error) {
 	var records []Record
 	for rows.Next() {
 		var r Record
-		if err := rows.Scan(&r.ID, &r.Ts, &r.Weight, &r.Total, &r.Reject, &r.Status, &r.CreatedAt); err != nil {
+		// Handle NULL prefix if any
+		var prefix sql.NullString
+
+		if err := rows.Scan(&r.ID, &r.Ts, &r.Weight, &r.Total, &r.Reject, &r.Status, &prefix, &r.CreatedAt); err != nil {
 			return nil, err
+		}
+		if prefix.Valid {
+			r.Prefix = prefix.String
+		} else {
+			r.Prefix = "-"
 		}
 		records = append(records, r)
 	}
 	return records, nil
+}
+
+type Summary struct {
+	Prefix      string
+	TotalCount  int
+	TotalWeight int
+}
+
+func getSummary() ([]Summary, error) {
+	if db == nil {
+		return []Summary{}, nil
+	}
+
+	// Hitung jumlah barang (count) dan total berat per prefix dalam 1 jam terakhir
+	// Asumsi: Kita menghitung record yang masuk (status=1 OK)
+	query := `
+		SELECT
+			COALESCE(prefix, 'Unknown') as prefix,
+			COUNT(*) as total_count,
+			COALESCE(SUM(weight), 0) as total_weight
+		FROM production_mdcw
+		WHERE created_at >= NOW() - INTERVAL '1 hour'
+		GROUP BY prefix
+		ORDER BY prefix ASC
+	`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var summaries []Summary
+	for rows.Next() {
+		var s Summary
+		if err := rows.Scan(&s.Prefix, &s.TotalCount, &s.TotalWeight); err != nil {
+			return nil, err
+		}
+		summaries = append(summaries, s)
+	}
+	return summaries, nil
 }

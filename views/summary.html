@@ -1,0 +1,18 @@
+{{range .Summaries}}
+<div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); min-width: 200px; flex: 1;">
+    <div style="font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+        {{.Prefix}}
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+        <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">{{.TotalCount}}</span>
+        <span style="font-size: 0.875rem; color: var(--text-muted);">items</span>
+    </div>
+    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+        Total Weight: {{.TotalWeight}}g
+    </div>
+</div>
+{{else}}
+<div style="padding: 1rem; color: var(--text-muted); font-size: 0.875rem;">
+    Belum ada data produksi dalam 1 jam terakhir.
+</div>
+{{end}}

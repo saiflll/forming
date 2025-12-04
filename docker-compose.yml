@@ -6,6 +6,12 @@ services:
     container_name: forming-app
     ports:
       - "3000:3000"
+    environment:
+      - DB_HOST=172.20.100.11
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password_rahasia_anda
+      - DB_NAME=servfi
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"

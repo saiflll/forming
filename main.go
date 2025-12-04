@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -12,6 +13,13 @@ import (
 	"github.com/gofiber/template/html/v2"
 	_ "github.com/lib/pq"
 )
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
 
 // Payload structure matching the JSON
 type Payload struct {
@@ -37,7 +45,14 @@ var db *sql.DB
 
 func main() {
 	// --- Database Connection ---
-	connStr := "postgres://postgres:postgres@172.20.100.11:5432/postgres?sslmode=disable"
+	dbHost := getEnv("DB_HOST", "172.20.100.11")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbUser := getEnv("DB_USER", "postgres")
+	dbPass := getEnv("DB_PASSWORD", "password_rahasia_anda")
+	dbName := getEnv("DB_NAME", "servfi")
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPass, dbHost, dbPort, dbName)
+
 	var err error
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {

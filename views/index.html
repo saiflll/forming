@@ -10,9 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- HTMX & Alpine -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <!-- HTMX & Alpine (Local) -->
+    <script src="/public/js/htmx.min.js"></script>
+    <script src="/public/js/alpine.min.js" defer></script>
 
     <style>
         :root {
@@ -282,6 +282,40 @@
                 </div>
                 <svg :style="open ? 'transform: rotate(180deg)' : ''" style="transition: 0.3s;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
+            <div x-show="open" x-transition style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                <p>Monitoring data produksi secara real-time dari mesin Forming. Data diperbarui otomatis melalui protokol MQTT dan disimpan ke database PostgreSQL.</p>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Produksi (1 Jam Terakhir)</h2>
+                <button class="btn btn-outline" 
+                        style="padding: 4px 8px; font-size: 0.75rem;"
+                        hx-get="/summary" 
+                        hx-target="#summary-container" 
+                        hx-trigger="click">
+                    Refresh
+                </button>
+            </div>
+            <div id="summary-container" 
+                 hx-get="/summary" 
+                 hx-trigger="load, every 60s" 
+                 style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <!-- Summary cards loaded here -->
+                <div style="color: var(--text-muted); font-size: 0.875rem;">Loading summary...</div>
+            </div>
+        </div>
+
+        <!-- Data Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Data Produksi</h2>
+                <div class="htmx-indicator" id="loading-indicator">
+                    <span style="font-size: 0.875rem; color: var(--text-muted);">Updating...</span>
+                </div>
+            </div>
             
             <form id="filters" class="controls">
                 <div class="form-group">
@@ -308,6 +342,25 @@
                         Refresh Data
                     </button>
                 </div>
+            </form>
+
+            <div class="table-container" style="margin-top: 1.5rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="10%">ID</th>
+                            <th width="20%">Timestamp</th>
+                            <th width="10%">Prefix</th>
+                            <th width="15%">Weight (g)</th>
+                            <th width="15%">Total</th>
+                            <th width="15%">Reject</th>
+                            <th width="15%">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-tbody" hx-get="/data-list" hx-trigger="load" hx-indicator="#loading-indicator">
+                        <!-- Data will be loaded here via HTMX -->
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                                 Memuat data...
                             </td>
                         </tr>

@@ -103,6 +103,7 @@ func main() {
 	})
 
 	app.Use(logger.New())
+	app.Static("/public", "./public")
 
 	// Route Halaman Utama
 	app.Get("/", func(c *fiber.Ctx) error {

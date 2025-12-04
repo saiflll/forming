@@ -7,11 +7,27 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DB_HOST=172.20.100.11
+      # KOREKSI 1: Gunakan nama container, JANGAN IP angka
+      - DB_HOST=postgres_db
       - DB_PORT=5432
       - DB_USER=postgres
-      - DB_PASSWORD=password_rahasia_anda
+      # Pastikan password ini benar sesuai settingan postgres container Anda
+      - DB_PASSWORD=password_rahasia_anda 
       - DB_NAME=servfi
+      
+      # SARAN TAMBAHAN: Masukkan config MQTT sekalian jika app butuh
+      - MQTT_HOST=emqx
+      - MQTT_PORT=1883
+      
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - production_network
+
+# KOREKSI 2: Bagian ini harus di paling kiri (sejajar dengan 'services')
+networks:
+  production_network:
+    name: servfor_iot-net
+    external: true

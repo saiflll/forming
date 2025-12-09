@@ -1,16 +1,19 @@
 {{range .Records}}
 <tr>
-    <td style="font-family: monospace; color: var(--text-muted);">#{{.ID}}</td>
-    <td>{{.Ts}}</td>
-    <td><span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: 600;">{{.Prefix}}</span></td>
-    <td style="font-weight: 600;">{{.Weight}}</td>
-    <td>{{.Total}}</td>
-    <td style="color: var(--danger);">{{.Reject}}</td>
+    <td style="font-family: monospace; color: var(--text-muted); font-size: 0.85em;">#{{.ID}}</td>
+    <td style="font-size: 0.875rem;">{{.Ts}}</td>
+    <td><span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.75em; font-weight: 700; letter-spacing: 0.5px;">{{.Prefix}}</span></td>
+    <td style="font-weight: 600; font-size: 0.95rem;">{{.Reg114}}g</td>
+    <td style="font-weight: 500; color: #475569;">{{.Reg2}}</td>
     <td>
-        {{if eq .Status 1}}
-            <span class="badge badge-success">OK</span>
+        {{if eq .Reg5 1}}
+            <span class="badge badge-success">✓ OK</span>
+        {{else if eq .Reg5 2}}
+            <span class="badge" style="background: #fef3c7; color: #92400e;">⚠ Under</span>
+        {{else if eq .Reg5 3}}
+            <span class="badge badge-danger">✗ Over</span>
         {{else}}
-            <span class="badge badge-danger">Reject</span>
+            <span class="badge" style="background: #e2e8f0; color: #475569;">Unknown</span>
         {{end}}
     </td>
 </tr>

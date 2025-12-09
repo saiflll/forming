@@ -7,27 +7,24 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # KOREKSI 1: Gunakan nama container, JANGAN IP angka
+      # Database Config - Connect to existing postgres_db container
       - DB_HOST=postgres_db
       - DB_PORT=5432
       - DB_USER=postgres
-      # Pastikan password ini benar sesuai settingan postgres container Anda
-      - DB_PASSWORD=password_rahasia_anda 
+      - DB_PASSWORD=password_rahasia_anda
       - DB_NAME=servfi
       
-      # SARAN TAMBAHAN: Masukkan config MQTT sekalian jika app butuh
+      # MQTT Config - Connect to existing emqx container
       - MQTT_HOST=emqx
       - MQTT_PORT=1883
       
+      # App Config
+      - TZ=Asia/Jakarta
+      
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
-      - default
-      - production_network
+      - servfor_iot-net
 
-# KOREKSI 2: Bagian ini harus di paling kiri (sejajar dengan 'services')
 networks:
-  production_network:
-    name: servfor_iot-net
+  servfor_iot-net:
     external: true

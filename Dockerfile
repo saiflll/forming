@@ -23,6 +23,9 @@ COPY --from=builder /app/forming-app .
 # Copy views directory (required for templates)
 COPY --from=builder /app/views ./views
 
+# Copy public directory (required for static assets)
+COPY --from=builder /app/public ./public
+
 # Expose port
 EXPOSE 3000
 

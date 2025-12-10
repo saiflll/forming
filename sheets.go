@@ -87,8 +87,12 @@ func getStatusText(status int) string {
 	switch status {
 	case 8:
 		return "Mesin Mati"
+	case 9:
+		return "Idle"
 	case 90:
 		return "Idle"
+	case 521:
+		return "OK"
 	case 8201:
 		return "Detect Metal"
 	case 25:

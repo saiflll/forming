@@ -8,8 +8,12 @@
     <td>
         {{if eq .Reg5 8}}
             <span class="badge" style="background: #1e293b; color: #f1f5f9;">⏸ Mesin Mati</span>
+        {{else if eq .Reg5 9}}
+            <span class="badge" style="background: #e0e7ff; color: #4338ca;">💤 Idle</span>
         {{else if eq .Reg5 90}}
             <span class="badge" style="background: #e0e7ff; color: #4338ca;">💤 Idle</span>
+        {{else if eq .Reg5 521}}
+            <span class="badge badge-success">✓ OK</span>
         {{else if eq .Reg5 8201}}
             <span class="badge" style="background: #fef3c7; color: #92400e;">🚫 Detect Metal</span>
         {{else if eq .Reg5 25}}

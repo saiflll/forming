@@ -6,6 +6,8 @@ services:
     container_name: forming-app
     ports:
       - "3000:3000"
+    env_file:
+      - .env.local
     environment:
       # Database Config - Connect to existing postgres_db container
       - DB_HOST=postgres_db

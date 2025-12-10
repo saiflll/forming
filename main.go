@@ -45,6 +45,13 @@ type Record struct {
 var db *sql.DB
 
 func main() {
+	// --- Google Sheets Integration ---
+	if err := InitGoogleSheets(); err != nil {
+		log.Printf("Warning: Google Sheets initialization failed: %v", err)
+	} else {
+		CreateSheetIfNotExists()
+	}
+
 	// --- Database Connection ---
 	dbHost := getEnv("DB_HOST", "172.20.100.11")
 	dbPort := getEnv("DB_PORT", "5432")
@@ -193,6 +200,34 @@ func main() {
 		return c.JSON(skipLogs)
 	})
 
+	// API Endpoint untuk Data dengan Date Range
+	app.Get("/data-by-date", func(c *fiber.Ctx) error {
+		startDate := c.Query("start_date")
+		endDate := c.Query("end_date")
+		status := c.Query("status")
+		sortBy := c.Query("sort")
+
+		records, err := getRecordsByDateRange(startDate, endDate, "", status, sortBy)
+		if err != nil {
+			log.Println("Error fetching records by date:", err)
+			return c.Status(500).SendString("Error fetching data")
+		}
+
+		return c.Render("data_list", fiber.Map{
+			"Records": records,
+		})
+	})
+
+	// API Endpoint untuk Prefixes (untuk tab dinamis)
+	app.Get("/prefixes", func(c *fiber.Ctx) error {
+		prefixes, err := getPrefixes()
+		if err != nil {
+			log.Println("Error fetching prefixes:", err)
+			return c.JSON([]string{})
+		}
+		return c.JSON(prefixes)
+	})
+
 	log.Fatal(app.Listen(":3000"))
 }
 
@@ -282,6 +317,13 @@ func insertData(p Payload) {
 		log.Println("Error inserting data:", err)
 	} else {
 		log.Println("Data inserted successfully")
+
+		// Export to Google Sheets (async, non-blocking)
+		go func(payload Payload) {
+			if err := AppendToSheet(payload); err != nil {
+				log.Printf("Warning: Failed to export to Sheets: %v", err)
+			}
+		}(p)
 	}
 }
 

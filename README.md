@@ -1,340 +1,236 @@
-# 🚀 FORMING APP - Production Monitor
+# Forming App - Production Monitor
 
-## 📦 Production Deployment (Docker)
+Dashboard monitoring produksi MDCW dengan fitur:
 
-### **Quick Deploy**
+## ✨ Fitur Utama
+
+### 📊 Dashboard Real-time
+
+- Summary produksi 1 jam terakhir per line
+- Data log dengan filter status (OK/Under/Over)
+- Sorting by weight atau newest
+- Auto-refresh data
+
+### 📅 **Date Range Filter** (NEW!)
+
+- Filter data berdasarkan tanggal custom
+- Pilih range: dari tanggal - sampai tanggal
+- Support filter kombinasi dengan status & sorting
+
+### 📤 **Export ke Google Spreadsheet** (NEW!)
+
+- Auto-export setiap data masuk ke Google Sheets
+- Real-time sync tanpa delay
+- Async & non-blocking
+- Lihat setup: [GOOGLE-SHEETS-SETUP.md](./GOOGLE-SHEETS-SETUP.md)
+
+### 💾 Data Export
+
+- Export to CSV untuk analisa offline
+- Skip log untuk data dengan weight = 0
+
+### 🎯 Fitur Lainnya
+
+- Tab dinamis per prefix/line
+- MQTT subscription real-time
+- PostgreSQL database storage
+- Modern & responsive UI
+
+## 🚀 Quick Start
+
+### 1. Setup Database & MQTT
 
 ```bash
-# 1. Clone atau upload aplikasi ke server
-git clone <repository-url> forming
-cd forming
-
-# 2. Buat file .env dari template
+# Edit kredensial di .env.local
 cp env.local.template .env.local
 nano .env.local
-
-# 3. Deploy dengan Docker Compose
-docker-compose up -d
-
-# 4. Monitor logs
-docker logs forming-app -f
 ```
 
-### **Access Dashboard**
+### 2. (Optional) Setup Google Sheets
 
-```
-http://<server-ip>:3000
-```
+Ikuti panduan lengkap: [GOOGLE-SHEETS-SETUP.md](./GOOGLE-SHEETS-SETUP.md)
 
----
-
-## 🔧 Configuration
-
-### **File `.env.local`**
-
-```env
-DB_HOST=postgres_db
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=password_rahasia_anda
-DB_NAME=servfi
-MQTT_HOST=emqx
-MQTT_PORT=1883
-MQTT_USER=
-MQTT_PASSWORD=
-TZ=Asia/Jakarta
-```
-
-**Catatan:**
-
-- Untuk Docker: gunakan service names (`postgres_db`, `emqx`)
-- Untuk local development: gunakan `localhost`
-
----
-
-## 📊 MQTT Message Format
-
-**Topic:** `production/mdcw`
-
-**Payload:**
-
-```json
-{
-  "ts": "2025-12-09 10:00:00",
-  "reg2": 1250,
-  "reg5": 1,
-  "reg114": 500,
-  "prefix": "mdcw2"
-}
-```
-
-**Field Description:**
-
-| Field    | Type   | Description                         | Example               |
-| -------- | ------ | ----------------------------------- | --------------------- |
-| `ts`     | string | Timestamp (YYYY-MM-DD HH:MM:SS)     | "2025-12-09 10:00:00" |
-| `reg2`   | int    | Total Pack Count                    | 1250                  |
-| `reg5`   | int    | Status Code (1=OK, 2=Under, 3=Over) | 1                     |
-| `reg114` | int    | Weight in grams                     | 500                   |
-| `prefix` | string | Machine/Node identifier             | "mdcw2"               |
-
-**Status Codes:**
-
-- `1` = ✓ OK (Normal weight)
-- `2` = ⚠ Under (Underweight)
-- `3` = ✗ Over (Overweight)
-
----
-
-## 🐳 Docker Commands
-
-### **Start Application**
+### 3. Install Dependencies
 
 ```bash
-docker-compose up -d
-```
-
-### **Stop Application**
-
-```bash
-docker-compose down
-```
-
-### **Rebuild Application**
-
-```bash
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
-```
-
-### **View Logs**
-
-```bash
-# Live logs
-docker logs forming-app -f
-
-# Last 100 lines
-docker logs forming-app --tail 100
-```
-
-### **Restart Application**
-
-```bash
-docker-compose restart
-```
-
----
-
-## 🎨 Dashboard Features
-
-- ✅ **Multi-prefix support** - Tab dinamis per mesin/node
-- ✅ **Real-time updates** - Auto-refresh setiap 60 detik
-- ✅ **Search & Filter** - Filter by status, sort by weight/time
-- ✅ **Data Export** - Export ke CSV untuk audit
-- ✅ **Summary Stats** - Total production last 1 hour per prefix
-- ✅ **Skip Log** - Track data dengan weight = 0
-- ✅ **Status Badges** - Visual indicators (OK/Under/Over)
-
----
-
-## 📂 Project Structure
-
-```
-forming/
-├── main.go              # Main application
-├── skip_log.go          # Skip log handler
-├── go.mod               # Go dependencies
-├── go.sum               # Go checksums
-├── Dockerfile           # Docker build config
-├── docker-compose.yml   # Docker services config
-├── .env.local           # Environment variables (gitignored)
-├── env.local.template   # Template untuk .env.local
-├── .gitignore           # Git ignore rules
-├── README.md            # This file
-├── views/               # HTML templates
-│   ├── index.html       # Main dashboard
-│   ├── data_list.html   # Data list partial
-│   └── summary.html     # Summary partial
-└── public/              # Static assets
-    └── js/
-        ├── htmx.min.js
-        └── alpine.min.js
-```
-
----
-
-## 🔧 Database
-
-### **Tables**
-
-**1. production_mdcw**
-
-Stores all valid production data:
-
-```sql
-CREATE TABLE production_mdcw (
-    id SERIAL PRIMARY KEY,
-    ts VARCHAR(50),
-    reg2 INTEGER,
-    reg5 INTEGER,
-    reg114 INTEGER,
-    prefix VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-**2. skip_log**
-
-Stores skipped data (weight = 0):
-
-```sql
-CREATE TABLE skip_log (
-    id SERIAL PRIMARY KEY,
-    ts VARCHAR(50),
-    reg2 INTEGER,
-    reg5 INTEGER,
-    reg114 INTEGER,
-    prefix VARCHAR(50),
-    reason VARCHAR(100),
-    skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-Tables are **automatically created** on first run.
-
----
-
-## 🔍 Troubleshooting
-
-### **Cannot connect to database**
-
-1. Check if PostgreSQL container is running:
-
-   ```bash
-   docker ps | grep postgres
-   ```
-
-2. Check database connection from app:
-   ```bash
-   docker logs forming-app | grep -i postgres
-   ```
-
-### **Cannot connect to MQTT**
-
-1. Check if EMQX container is running:
-
-   ```bash
-   docker ps | grep emqx
-   ```
-
-2. Check MQTT connection from app:
-   ```bash
-   docker logs forming-app | grep -i mqtt
-   ```
-
-### **No data showing on dashboard**
-
-1. Check if MQTT messages are being received:
-
-   ```bash
-   docker logs forming-app | grep "Received message"
-   ```
-
-2. Publish test message:
-   ```bash
-   docker exec -it emqx_container_name emqx_ctl messages publish \
-     production/mdcw \
-     '{"ts":"2025-12-09 10:00:00","reg2":100,"reg5":1,"reg114":500,"prefix":"test"}'
-   ```
-
-### **Port already in use**
-
-Change port mapping in `docker-compose.yml`:
-
-```yaml
-ports:
-  - "3001:3000" # Change external port from 3000 to 3001
-```
-
----
-
-## 🔐 Security Notes
-
-- Never commit `.env.local` to git (already in `.gitignore`)
-- Change default database passwords in production
-- Use MQTT authentication in production (set `MQTT_USER` and `MQTT_PASSWORD`)
-- Consider using HTTPS/TLS for production deployment
-
----
-
-## 📈 Performance
-
-- **Data Limit**: Dashboard shows last 100 records per query
-- **Auto-refresh**: 60 seconds
-- **Summary Window**: Last 1 hour
-- **Skip Log**: Automatically filters weight = 0
-
----
-
-## 🚀 Development
-
-### **Local Development (without Docker)**
-
-```bash
-# 1. Install Go 1.21+
-# 2. Install dependencies
 go mod download
+```
 
-# 3. Set environment variables
-export DB_HOST=localhost
-export DB_PORT=5432
-export MQTT_HOST=localhost
-export MQTT_PORT=1883
+### 4. Jalankan Aplikasi
 
-# 4. Run
+**Dengan SSH Tunnel (Recommended):**
+
+```bash
+start-with-tunnel.bat
+```
+
+**Atau manual:**
+
+```bash
 go run .
 ```
 
-### **Build Binary**
+Buka browser: http://localhost:3000
+
+## 📋 Environment Variables
 
 ```bash
-# Windows
-go build -o forming.exe
+# Database
+DB_HOST=172.20.100.11
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=servfi
 
-# Linux
-GOOS=linux GOARCH=amd64 go build -o forming
+# MQTT
+MQTT_HOST=172.20.100.11
+MQTT_PORT=1883
+MQTT_USER=your_user
+MQTT_PASSWORD=your_password
+
+# Google Sheets (Optional)
+GOOGLE_SHEETS_CREDENTIALS=base64_encoded_credentials
+GOOGLE_SPREADSHEET_ID=your_spreadsheet_id
+GOOGLE_SHEET_NAME=Production Data
 ```
 
----
+## 🎨 UI Features
+
+### Date Range Picker
+
+```
+[📅 Dari Tanggal] [📅 Sampai Tanggal] [Clear Filter]
+```
+
+- Pilih custom date range
+- Auto-load data saat tanggal berubah
+- Clear filter untuk kembali ke mode real-time
+
+### Filter Options
+
+- **Status**: Semua / OK / Under / Over
+- **Sort**: Terbaru / Berat Tertinggi / Berat Terendah
+- **Prefix Tab**: Semua Data / Line-specific
+
+## 📊 Data Flow
+
+```
+IoT Device (MQTT)
+    ↓
+MQTT Broker
+    ↓
+Forming App (subscribe)
+    ↓
+    ├──→ PostgreSQL (insert)
+    ├──→ Google Sheets (async export) [NEW!]
+    └──→ Web Dashboard (HTMX)
+```
+
+## 🔧 Tech Stack
+
+- **Backend**: Go + Fiber
+- **Frontend**: HTMX + Alpine.js
+- **Database**: PostgreSQL
+- **Message Queue**: MQTT
+- **Cloud Integration**: Google Sheets API
+- **UI**: Vanilla CSS (responsive)
+
+## 📁 File Structure
+
+```
+forming/
+├── main.go                    # Main application
+├── sheets.go                  # Google Sheets integration [NEW]
+├── date_filter.go             # Date range filtering [NEW]
+├── skip_log.go               # Skip log handler
+├── views/
+│   ├── index.html            # Dashboard with date picker [UPDATED]
+│   ├── data_list.html        # Data table template
+│   └── summary.html          # Summary cards
+├── GOOGLE-SHEETS-SETUP.md    # Setup guide [NEW]
+└── README-TUNNEL.md          # SSH tunneling guide
+```
+
+## 🆕 What's New
+
+### v2.0 - Date Range & Sheets Integration
+
+**✅ Date Range Filter**
+
+- Custom date picker untuk filter data
+- Support start_date & end_date parameters
+- Combine dengan filter lain (status, sort, prefix)
+
+**✅ Google Sheets Export**
+
+- Auto-export ke spreadsheet
+- Async & non-blocking
+- Configurable via environment variables
+- Complete setup documentation
+
+**✅ UI Improvements**
+
+- Date picker controls
+- Clear filter button
+- Better responsive design
 
 ## 📝 API Endpoints
 
-| Method | Endpoint                                | Description             |
-| ------ | --------------------------------------- | ----------------------- |
-| GET    | `/`                                     | Main dashboard          |
-| GET    | `/data-list?status=&sort=`              | Data list with filters  |
-| GET    | `/data-by-prefix?prefix=&status=&sort=` | Data filtered by prefix |
-| GET    | `/summary`                              | Summary stats (1 hour)  |
-| GET    | `/skip-log`                             | Skip log entries        |
-| GET    | `/update-time`                          | Current server time     |
+### Data Endpoints
+
+```
+GET /data-list?status=all&sort=newest
+GET /data-by-prefix?prefix=LINE-1&status=1
+GET /data-by-date?start_date=2025-12-01&end_date=2025-12-10  [NEW]
+```
+
+### Summary & Metadata
+
+```
+GET /summary              # Produksi 1 jam terakhir
+GET /prefixes             # List semua line/prefix [NEW]
+GET /skip-log             # Log data yang di-skip
+```
+
+## 🔐 Security Notes
+
+⚠️ **PENTING:**
+
+- Jangan commit `.env.local` ke Git
+- Jangan commit `*credentials*.json` ke Git
+- Gunakan SSH tunnel untuk koneksi ke server production
+- Rotate service account keys secara berkala
+
+## 📖 Documentation
+
+- [Google Sheets Setup](./GOOGLE-SHEETS-SETUP.md) - Setup integrasi Google Sheets
+- [SSH Tunnel Guide](./README-TUNNEL.md) - Setup SSH tunneling
+- [Deployment Guide](./DEPLOYMENT.md) - Deploy ke production
+
+## 🐛 Troubleshooting
+
+### Google Sheets tidak sync
+
+1. Check environment variables sudah set
+2. Verify spreadsheet sudah di-share dengan service account
+3. Check log untuk error message
+4. Lihat [GOOGLE-SHEETS-SETUP.md](./GOOGLE-SHEETS-SETUP.md)
+
+### Date filter tidak jalan
+
+1. Pastikan format date: YYYY-MM-DD
+2. Check browser console untuk JavaScript errors
+3. Verify `/data-by-date` endpoint response
+
+## 📞 Support
+
+Jika ada masalah, check:
+
+1. Log aplikasi untuk error messages
+2. Browser console untuk JS errors
+3. Database connection status
+4. MQTT broker connectivity
 
 ---
 
-## ✅ Production Checklist
-
-- [ ] `.env.local` configured with production credentials
-- [ ] Database passwords changed from defaults
-- [ ] MQTT authentication enabled (if needed)
-- [ ] Port 3000 accessible from network
-- [ ] Docker and Docker Compose installed
-- [ ] `docker-compose up -d` successful
-- [ ] Logs show "Connected to PostgreSQL"
-- [ ] Logs show "MQTT Connected successfully"
-- [ ] Dashboard accessible via browser
-- [ ] Test MQTT message received and displayed
-
----
-
-**Version:** 2.0  
-**Last Updated:** 2025-12-09
+**Made with ❤️ for Production Monitoring**

@@ -6,14 +6,18 @@
     <td style="font-weight: 600; font-size: 0.95rem;">{{.Reg114}}g</td>
     <td style="font-weight: 500; color: #475569;">{{.Reg2}}</td>
     <td>
-        {{if eq .Reg5 1}}
-            <span class="badge badge-success">✓ OK</span>
-        {{else if eq .Reg5 2}}
-            <span class="badge" style="background: #fef3c7; color: #92400e;">⚠ Under</span>
-        {{else if eq .Reg5 3}}
-            <span class="badge badge-danger">✗ Over</span>
+        {{if eq .Reg5 8}}
+            <span class="badge" style="background: #1e293b; color: #f1f5f9;">⏸ Mesin Mati</span>
+        {{else if eq .Reg5 90}}
+            <span class="badge" style="background: #e0e7ff; color: #4338ca;">💤 Idle</span>
+        {{else if eq .Reg5 8201}}
+            <span class="badge" style="background: #fef3c7; color: #92400e;">🚫 Detect Metal</span>
+        {{else if eq .Reg5 25}}
+            <span class="badge" style="background: #ffedd5; color: #c2410c;">⚠ Under Weight</span>
+        {{else if eq .Reg5 73}}
+            <span class="badge badge-danger">✗ Over Weight</span>
         {{else}}
-            <span class="badge" style="background: #e2e8f0; color: #475569;">Unknown</span>
+            <span class="badge" style="background: #e2e8f0; color: #475569;">? Unknown ({{.Reg5}})</span>
         {{end}}
     </td>
 </tr>

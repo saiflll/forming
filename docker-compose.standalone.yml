@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  forming-app:
+    build: .
+    container_name: forming-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    networks:
+      - default
+
+# Standalone mode - tidak perlu external network
+# Jika ingin connect ke postgres/mqtt container lain, gunakan:
+# docker-compose -f docker-compose.standalone.yml up

@@ -1,6 +1,7 @@
 # Binaries
 *.exe
 forming-app
+forming
 
 # Environment files (jangan di-commit ke git!)
 .env
@@ -23,4 +24,30 @@ vendor/
 *.tmp
 *.swp
 *~
+
+# Google Sheets Credentials (JANGAN COMMIT!)
+*credentials*.json
+service-account*.json
+
+# SSH Tunnel Scripts (Windows-specific, jangan di-commit)
+*.bat
+test-ssh.bat
+tunnel.bat
+tunnel-debug.bat
+start-with-tunnel.bat
+setup-ssh-key.bat
+tunneling-plink*.bat
+
+# Upload/Deploy Scripts (optional, bisa di-commit jika perlu)
+# upload.ps1
+# deploy.sh
+
+# SSH socket files
+ssh-tunnel-socket*
+*.sock
+
+# Documentation (optional - jangan di-commit)
+*.md
+!README.md
+COMMIT-MESSAGE.txt
 

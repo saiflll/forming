@@ -17,8 +17,8 @@ services:
       # MQTT Config - Connect to existing emqx container
       - MQTT_HOST=emqx
       - MQTT_PORT=1883
-      - MQTT_USER=forming_app
-      - MQTT_PASSWORD=forming_secure_2025
+      - MQTT_USER=forming
+      - MQTT_PASSWORD=forming
       
       # App Config
       - TZ=Asia/Jakarta
@@ -29,4 +29,6 @@ services:
 
 networks:
   servfor_iot-net:
-    external: true
+    external: false
+    name: servfor_iot-net
+    driver: bridge

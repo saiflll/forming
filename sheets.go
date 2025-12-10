@@ -91,7 +91,11 @@ func getStatusText(status int) string {
 		return "Idle"
 	case 90:
 		return "Idle"
+	case 41:
+		return "OK"
 	case 521:
+		return "OK"
+	case 553:
 		return "OK"
 	case 8201:
 		return "Detect Metal"

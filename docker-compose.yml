@@ -23,12 +23,10 @@ services:
       # App Config
       - TZ=Asia/Jakarta
       
-    restart: unless-stopped
+    restart: always
     networks:
       - servfor_iot-net
 
 networks:
   servfor_iot-net:
-    external: false
-    name: servfor_iot-net
-    driver: bridge
+    external: true
